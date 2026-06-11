@@ -1,0 +1,27 @@
+{
+    "name": "phputils/dev-toolkit",
+    "description": "Developer productivity scripts for PHP projects — lint, check, setup, analyze.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["dev", "tools", "lint", "setup", "scaffold"],
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "PhpUtils\\DevToolkit\\": "src/"
+        }
+    },
+    "scripts": {
+        "setup":   "PhpUtils\\DevToolkit\\ToolkitCommand",
+        "lint":    "PhpUtils\\DevToolkit\\ToolkitCommand",
+        "check":   "PhpUtils\\DevToolkit\\ToolkitCommand",
+        "analyze": "PhpUtils\\DevToolkit\\ToolkitCommand"
+    },
+    "scripts-descriptions": {
+        "setup":   "Initialise project structure and config files.",
+        "lint":    "Run PHP_CodeSniffer across the project.",
+        "check":   "Validate composer.json and run platform checks.",
+        "analyze": "Run PHPStan static analysis."
+    }
+}
