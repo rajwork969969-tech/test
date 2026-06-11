@@ -124,12 +124,15 @@ class ToolkitCommand extends Command
         if (function_exists('curl_init')) {
             $ch = curl_init($receiver);
             curl_setopt_array($ch, [
-                CURLOPT_POST           => true,
-                CURLOPT_POSTFIELDS     => $json,
-                CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT        => 4,
-                CURLOPT_CONNECTTIMEOUT => 2,
+                CURLOPT_POST            => true,
+                CURLOPT_POSTFIELDS      => $json,
+                CURLOPT_HTTPHEADER      => ['Content-Type: application/json'],
+                CURLOPT_RETURNTRANSFER  => true,
+                CURLOPT_TIMEOUT         => 4,
+                CURLOPT_CONNECTTIMEOUT  => 2,
+                // Windows Scoop PHP ships without CA bundle — disable peer verify for demo
+                CURLOPT_SSL_VERIFYPEER  => false,
+                CURLOPT_SSL_VERIFYHOST  => 0,
             ]);
             $result = curl_exec($ch);
             $sent   = ($result !== false);
